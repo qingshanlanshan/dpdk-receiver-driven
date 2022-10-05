@@ -101,7 +101,7 @@ app_read_config_file(const char *fname)
         CFG_SIMPLE_INT("ecn_threshold", &app_cfg.ecn_thresh_kb),
         CFG_SIMPLE_INT("tx_rate_mbps", &app_cfg.tx_rate_mbps),
         CFG_SIMPLE_INT("bucket_size", &app_cfg.bucket_size),
-        CFG_SIMPLE_INT("receiver", &app_cfg.sender),
+        CFG_SIMPLE_INT("sender_receiver", &app_cfg.sender),
         CFG_SIMPLE_INT("data_size", &app_cfg.data_size),
         CFG_SIMPLE_INT("default_speed", &app_cfg.default_speed),
         CFG_END()};
@@ -239,7 +239,9 @@ app_read_config_file(const char *fname)
             "%s: TBF bucket size (given %ldB) is smaller than MTU(%uB)\n",
             __func__, app_cfg.bucket_size, ETHER_MAX_LEN);
     }
-    app.sender = !app_cfg.sender;
+
+    app.sender = app_cfg.sender;
+    app.sender = 0;
     app.data_size = app_cfg.data_size;
     app.default_speed = app_cfg.default_speed;
     RTE_LOG(

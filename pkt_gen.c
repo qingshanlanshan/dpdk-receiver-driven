@@ -45,11 +45,11 @@ void app_main_loop_pkt_gen(void)
     {
         uint64_t last_time = rte_get_tsc_cycles();
         app.cpu_freq[rte_lcore_id()] = rte_get_tsc_hz();
-        app.default_speed = 100;
+        // app.default_speed = 100;
         int last_sequence_number = 0;
         int pull_to_gen = 0;
         int last_pull_number = -1;
-
+        char *ret;
         // SYN pkt
         struct rte_mbuf *p = rte_pktmbuf_alloc(app.pool);
         struct pkt_hdr *data_hdr = (struct pkt_hdr *)malloc(sizeof(struct pkt_hdr));
@@ -57,11 +57,19 @@ void app_main_loop_pkt_gen(void)
         set_data_hdr(data_hdr, last_sequence_number++);
         data_hdr->flags.syn = 1;
         // header
-        memcpy(rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr)), data_hdr, sizeof(struct pkt_hdr));
+        ret = rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr));
+        RTE_LOG(DEBUG, SWITCH, "%lu\n", ret);
+        memcpy(ret, data_hdr, sizeof(struct pkt_hdr));
+
         // data
-        memset(rte_pktmbuf_append(p, sizeof(char) * app.data_size), 0, sizeof(char) * app.data_size);
+        ret = rte_pktmbuf_append(p, sizeof(char) * app.data_size);
+        RTE_LOG(DEBUG, SWITCH, "%lu, data size=%d\n", ret,app.data_size);
+        memset(ret, 0, sizeof(char) * app.data_size);
 
         RTE_LOG(DEBUG, SWITCH, "%d, %lu\n", p->data_len, sizeof(struct pkt_hdr));
+        struct pkt_hdr *hdr = rte_pktmbuf_mtod(p, struct pkt_hdr *);
+        RTE_LOG(DEBUG, SWITCH, "syn=%d,seq=%d\n", hdr->flags.syn, hdr->sequence_number);
+
         rte_ring_sp_enqueue(app.rings_tx, p);
         data_hdr->flags.syn = 0;
         struct app_mbuf_array *worker_mbuf;

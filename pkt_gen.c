@@ -94,7 +94,7 @@ void app_main_loop_pkt_gen(void)
             if (ret == -ENOENT)
                 continue;
             struct pkt_hdr *hdr = rte_pktmbuf_mtod(worker_mbuf->array[0], struct pkt_hdr *);
-
+            RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %lu\n", hdr->flags.pull ? "PULL" : "DATA", hdr->flags.syn, hdr->flags.pull ? "PULL number" : "SEQ number", hdr->flags.pull ? hdr->pull_number : hdr->sequence_number);
             if (hdr->flags.pull)
             {
                 if (hdr->pull_number > last_pull_number)
@@ -147,6 +147,7 @@ void app_main_loop_pkt_gen(void)
             if (ret == -ENOENT)
                 continue;
             struct pkt_hdr *hdr = rte_pktmbuf_mtod(worker_mbuf->array[0], struct pkt_hdr *);
+            RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %lu\n", hdr->flags.pull ? "PULL" : "DATA", hdr->flags.syn, hdr->flags.pull ? "PULL number" : "SEQ number", hdr->flags.pull ? hdr->pull_number : hdr->sequence_number);
             if (!start)
             {
                 start = hdr->flags.syn;
@@ -163,7 +164,9 @@ void app_main_loop_pkt_gen(void)
             {
                 gen_pull = 0;
                 break;
-            }else{
+            }
+            else
+            {
                 pull_to_gen++;
             }
 

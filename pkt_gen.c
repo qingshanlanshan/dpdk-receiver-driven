@@ -48,7 +48,7 @@ void app_main_loop_pkt_gen(void)
         // app.default_speed = 100;
         int last_sequence_number = 0;
         int pull_to_gen = 0;
-        int last_pull_number = -1;
+        int last_pull_number = 0;
         char *ret;
 
         // SYN pkt

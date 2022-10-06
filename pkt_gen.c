@@ -63,7 +63,7 @@ void app_main_loop_pkt_gen(void)
 
         // data
         ret = rte_pktmbuf_append(p, sizeof(char) * app.data_size);
-        RTE_LOG(DEBUG, SWITCH, "%lu, data size=%d\n", ret,app.data_size);
+        RTE_LOG(DEBUG, SWITCH, "%lu, data size=%d\n", ret, app.data_size);
         memset(ret, 0, sizeof(char) * app.data_size);
 
         RTE_LOG(DEBUG, SWITCH, "%d, %lu\n", p->data_len, sizeof(struct pkt_hdr));
@@ -120,7 +120,7 @@ void app_main_loop_pkt_gen(void)
         app.cpu_freq[rte_lcore_id()] = rte_get_tsc_hz();
         app.pull_gen_time = app.cpu_freq[rte_lcore_id()] / (app.default_speed * (1 << 20)) * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char));
 
-        bool start = 0, gen_pull = 1;
+        bool start = 0;
         int last_sequence_number = 0;
         int pull_to_gen = 0;
         uint32_t pull_number = 0;
@@ -135,7 +135,7 @@ void app_main_loop_pkt_gen(void)
         {
 
             now_time = rte_get_tsc_cycles();
-            if (gen_pull && pull_to_gen && now_time - last_time > app.pull_gen_time)
+            if (start && pull_to_gen && now_time - last_time > app.pull_gen_time)
             {
                 last_time = now_time;
                 struct rte_mbuf *p = rte_pktmbuf_alloc(app.pool);
@@ -143,6 +143,8 @@ void app_main_loop_pkt_gen(void)
                 set_pull_hdr(pull_hdr, pull_number++);
 
                 memcpy(rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr)), pull_hdr, sizeof(struct pkt_hdr));
+
+                RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %lu\n", pull_hdr->flags.pull ? "PULL" : "DATA", pull_hdr->flags.syn, pull_hdr->flags.pull ? "PULL number" : "SEQ number", pull_hdr->flags.pull ? pull_hdr->pull_number : pull_hdr->sequence_number);
 
                 rte_ring_sp_enqueue(app.rings_tx, p);
                 pull_to_gen--;
@@ -170,7 +172,7 @@ void app_main_loop_pkt_gen(void)
             }
             if (hdr->flags.end)
             {
-                gen_pull = 0;
+                start = 0;
                 break;
             }
             else

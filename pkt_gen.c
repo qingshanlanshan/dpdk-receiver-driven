@@ -118,7 +118,7 @@ void app_main_loop_pkt_gen(void)
     {
         uint64_t last_time = rte_get_tsc_cycles();
         app.cpu_freq[rte_lcore_id()] = rte_get_tsc_hz();
-        app.pull_gen_time = app.cpu_freq[rte_lcore_id()] / app.default_speed * (1 << 20) * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char));
+        app.pull_gen_time = app.cpu_freq[rte_lcore_id()] / (app.default_speed * (1 << 20)) * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char));
 
         bool start = 0, gen_pull = 1;
         int last_sequence_number = 0;

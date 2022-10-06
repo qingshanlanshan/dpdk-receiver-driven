@@ -13,9 +13,9 @@ ecn_threshold = 32
 tx_rate_mbps = 9999
 # bucket size in bytes
 bucket_size = 5000
-# help
-# sender_receiver = 1
-data_size = 748
+# doesn't work, why?
+# sender=1 receiver=0
+sender=1
 # Mbps
 default_speed = 2
 

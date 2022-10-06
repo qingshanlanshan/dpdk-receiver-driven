@@ -18,7 +18,7 @@ static void set_pull_hdr(struct pkt_hdr *pull_hdr, uint32_t pull_number)
     pull_hdr->flags.pull = 1;
     pull_hdr->pull_number = pull_number++;
 }
-static void set_ack_hdr(struct pkt_hdr *ack_hdr, uint32_t sequence_number, bool ack)
+static void __rte_unused set_ack_hdr(struct pkt_hdr *ack_hdr, uint32_t sequence_number, bool ack)
 {
     // ack_hdr->eth = app.hdr->eth;
     // ack_hdr->ip = app.hdr->ip;
@@ -43,12 +43,12 @@ void app_main_loop_pkt_gen(void)
     RTE_LOG(DEBUG, SWITCH, "%d\n", app.sender);
     if (app.sender) // sender
     {
-        uint64_t last_time = rte_get_tsc_cycles();
-        app.cpu_freq[rte_lcore_id()] = rte_get_tsc_hz();
+        // uint64_t last_time = rte_get_tsc_cycles();
+        // app.cpu_freq[rte_lcore_id()] = rte_get_tsc_hz();
         // app.default_speed = 100;
         int last_sequence_number = 0;
         int pull_to_gen = 0;
-        int last_pull_number = 0;
+        uint32_t last_pull_number = 0;
         char *ret;
 
         // SYN pkt
@@ -60,12 +60,12 @@ void app_main_loop_pkt_gen(void)
 
         // header
         ret = rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr));
-        RTE_LOG(DEBUG, SWITCH, "%lu\n", ret);
+        RTE_LOG(DEBUG, SWITCH, "%u\n", ret);
         memcpy(ret, data_hdr, sizeof(struct pkt_hdr));
 
         // data
         ret = rte_pktmbuf_append(p, sizeof(char) * app.data_size);
-        RTE_LOG(DEBUG, SWITCH, "%lu, data size=%d\n", ret, app.data_size);
+        RTE_LOG(DEBUG, SWITCH, "%u, data size=%d\n", ret, app.data_size);
         memset(ret, 0, sizeof(char) * app.data_size);
 
         // check pkt
@@ -95,7 +95,7 @@ void app_main_loop_pkt_gen(void)
                 memcpy(rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr)), data_hdr, sizeof(struct pkt_hdr));
                 memset(rte_pktmbuf_append(p, sizeof(char) * app.data_size), 0, sizeof(char) * app.data_size);
 
-                RTE_LOG(DEBUG, SWITCH, "Sent pkt: %s, SYN = %d, %s = %lu\n", data_hdr->flags.pull ? "PULL" : "DATA", data_hdr->flags.syn, data_hdr->flags.pull ? "PULL number" : "SEQ number", data_hdr->flags.pull ? data_hdr->pull_number : data_hdr->sequence_number);
+                RTE_LOG(DEBUG, SWITCH, "Sent pkt: %s, SYN = %d, %s = %u\n", data_hdr->flags.pull ? "PULL" : "DATA", data_hdr->flags.syn, data_hdr->flags.pull ? "PULL number" : "SEQ number", data_hdr->flags.pull ? data_hdr->pull_number : data_hdr->sequence_number);
 
                 rte_ring_sp_enqueue(app.rings_tx, p);
                 pull_to_gen--;
@@ -109,7 +109,7 @@ void app_main_loop_pkt_gen(void)
                 continue;
             struct pkt_hdr *hdr = rte_pktmbuf_mtod(worker_mbuf->array[0], struct pkt_hdr *);
 
-            RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %lu\n", hdr->flags.pull ? "PULL" : "DATA", hdr->flags.syn, hdr->flags.pull ? "PULL number" : "SEQ number", hdr->flags.pull ? hdr->pull_number : hdr->sequence_number);
+            RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %u\n", hdr->flags.pull ? "PULL" : "DATA", hdr->flags.syn, hdr->flags.pull ? "PULL number" : "SEQ number", hdr->flags.pull ? hdr->pull_number : hdr->sequence_number);
 
             RTE_LOG(DEBUG, SWITCH, "last_pull_number=%d,pull_to_gen=%d,hdr->flags.pull=%d,hdr->pull_number=%d\n", last_pull_number, pull_to_gen,hdr->flags.pull,hdr->pull_number);
 
@@ -130,7 +130,7 @@ void app_main_loop_pkt_gen(void)
         app.pull_gen_time = app.cpu_freq[rte_lcore_id()] / app.default_speed * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
         RTE_LOG(DEBUG, SWITCH, "cpu_freq=%lu, pull_gen_time=%lu\n", app.cpu_freq[rte_lcore_id()], app.pull_gen_time);
         bool start = 0;
-        int last_sequence_number = 0;
+        // int last_sequence_number = 0;
         int pull_to_gen = 10;
         uint32_t pull_number = 0;
         struct app_mbuf_array *worker_mbuf;
@@ -153,7 +153,7 @@ void app_main_loop_pkt_gen(void)
 
                 memcpy(rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr)), pull_hdr, sizeof(struct pkt_hdr));
 
-                RTE_LOG(DEBUG, SWITCH, "Sent pkt: %s, SYN = %d, %s = %lu\n", pull_hdr->flags.pull ? "PULL" : "DATA", pull_hdr->flags.syn, pull_hdr->flags.pull ? "PULL number" : "SEQ number", pull_hdr->flags.pull ? pull_hdr->pull_number : pull_hdr->sequence_number);
+                RTE_LOG(DEBUG, SWITCH, "Sent pkt: %s, SYN = %d, %s = %u\n", pull_hdr->flags.pull ? "PULL" : "DATA", pull_hdr->flags.syn, pull_hdr->flags.pull ? "PULL number" : "SEQ number", pull_hdr->flags.pull ? pull_hdr->pull_number : pull_hdr->sequence_number);
 
                 rte_ring_sp_enqueue(app.rings_tx, p);
                 pull_to_gen--;
@@ -166,7 +166,7 @@ void app_main_loop_pkt_gen(void)
             if (ret == -ENOENT)
                 continue;
             struct pkt_hdr *hdr = rte_pktmbuf_mtod(worker_mbuf->array[0], struct pkt_hdr *);
-            RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %lu\n", hdr->flags.pull ? "PULL" : "DATA", hdr->flags.syn, hdr->flags.pull ? "PULL number" : "SEQ number", hdr->flags.pull ? hdr->pull_number : hdr->sequence_number);
+            RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %u\n", hdr->flags.pull ? "PULL" : "DATA", hdr->flags.syn, hdr->flags.pull ? "PULL number" : "SEQ number", hdr->flags.pull ? hdr->pull_number : hdr->sequence_number);
             if (!start)
             {
                 start = hdr->flags.syn;

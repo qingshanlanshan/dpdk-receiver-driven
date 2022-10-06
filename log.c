@@ -30,7 +30,7 @@ void app_main_loop_test(void)
             {
                 irate = (port_stats.ibytes - port_stats_vector[i].ibytes) * 8.0 / 1000000;
                 orate = (port_stats.obytes - port_stats_vector[i].obytes) * 8.0 / 1000000;
-                port_stats.ierrors;
+                // port_stats.ierrors;
                 time_in_s = (now_time - base_time) * 1.0 / app.cpu_freq[rte_lcore_id()];
                 RTE_LOG(INFO, SWITCH, "Time: %-5fs Port %d: ipkts=%-5ld opkts=%-5ld irate=%-10fMbps orate=%-10fMbps ierrors=%lu,qlen_pkts_out=%d,qlen_bytes_out=%d\n",
                         time_in_s, i, port_stats.ipackets, port_stats.opackets, irate, orate, port_stats.ierrors, app.qlen_pkts_out, app.qlen_bytes_out);

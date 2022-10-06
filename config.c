@@ -86,7 +86,6 @@ app_read_config_file(const char *fname)
         .tx_rate_mbps = -1,
         .bucket_size = -1,
         .sender = 1,
-        .data_size = 748,
         .default_speed = 1,
         .cfg = NULL};
     cfg_opt_t opts[] = {
@@ -101,8 +100,8 @@ app_read_config_file(const char *fname)
         CFG_SIMPLE_INT("ecn_threshold", &app_cfg.ecn_thresh_kb),
         CFG_SIMPLE_INT("tx_rate_mbps", &app_cfg.tx_rate_mbps),
         CFG_SIMPLE_INT("bucket_size", &app_cfg.bucket_size),
-        CFG_SIMPLE_INT("sender_receiver", &app_cfg.sender),
-        CFG_SIMPLE_INT("data_size", &app_cfg.data_size),
+        CFG_SIMPLE_INT("sender", &app_cfg.sender),
+        // CFG_SIMPLE_INT("something", &app_cfg.sender),
         CFG_SIMPLE_INT("default_speed", &app_cfg.default_speed),
         CFG_END()};
     app_cfg.cfg = cfg_init(opts, 0);
@@ -241,8 +240,10 @@ app_read_config_file(const char *fname)
     }
 
     app.sender = app_cfg.sender;
+    // set it here
     app.sender = 0;
-    app.data_size = app_cfg.data_size;
+    RTE_LOG(DEBUG,SWITCH,"%d,%d\n",app_cfg.sender,app_cfg.default_speed);
+    app.data_size = 1500-sizeof(struct pkt_hdr);
     app.default_speed = app_cfg.default_speed;
     RTE_LOG(
         INFO, SWITCH,

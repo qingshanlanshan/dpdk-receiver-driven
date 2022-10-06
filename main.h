@@ -132,7 +132,6 @@ struct app_configs {
     struct header *hdr;
     int default_speed;
     int sender;
-    int data_size;
     cfg_t *cfg;
 };
 
@@ -233,7 +232,7 @@ struct app_params {
     int default_speed;
     uint64_t pull_gen_time;
     int tot_pkt;
-    bool sender;
+    int sender;
     int data_size;
 } __rte_cache_aligned;
 

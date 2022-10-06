@@ -82,8 +82,8 @@ void app_main_loop_pkt_gen(void)
             if (pull_to_gen > 0)
             {
                 uint64_t now_time = rte_get_tsc_cycles();
-                if (now_time - last_time < app.pull_gen_time)
-                    continue;
+                // if (now_time - last_time < app.pull_gen_time)
+                //     continue;
                 last_time = now_time;
                 struct rte_mbuf *p = rte_pktmbuf_alloc(app.pool);
                 // struct pkt_hdr *data_hdr;

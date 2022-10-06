@@ -50,12 +50,17 @@ void app_main_loop_pkt_gen(void)
         int pull_to_gen = 0;
         int last_pull_number = -1;
         char *ret;
+
+
+
+
         // SYN pkt
         struct rte_mbuf *p = rte_pktmbuf_alloc(app.pool);
         struct pkt_hdr *data_hdr = (struct pkt_hdr *)malloc(sizeof(struct pkt_hdr));
 
         set_data_hdr(data_hdr, last_sequence_number++);
         data_hdr->flags.syn = 1;
+
         // header
         ret = rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr));
         RTE_LOG(DEBUG, SWITCH, "%lu\n", ret);
@@ -66,6 +71,7 @@ void app_main_loop_pkt_gen(void)
         RTE_LOG(DEBUG, SWITCH, "%lu, data size=%d\n", ret, app.data_size);
         memset(ret, 0, sizeof(char) * app.data_size);
 
+        // check pkt
         RTE_LOG(DEBUG, SWITCH, "%d, %lu\n", p->data_len, sizeof(struct pkt_hdr));
         struct pkt_hdr *hdr = rte_pktmbuf_mtod(p, struct pkt_hdr *);
         RTE_LOG(DEBUG, SWITCH, "syn=%d,seq=%d\n", hdr->flags.syn, hdr->sequence_number);
@@ -127,7 +133,7 @@ void app_main_loop_pkt_gen(void)
         struct app_mbuf_array *worker_mbuf;
         worker_mbuf = rte_malloc_socket(NULL, sizeof(struct app_mbuf_array),
                                         RTE_CACHE_LINE_SIZE, rte_socket_id());
-        uint64_t now_time;
+        uint64_t now_time=rte_get_tsc_cycles();
         // int i;
         struct pkt_hdr *pull_hdr = (struct pkt_hdr *)malloc(sizeof(struct pkt_hdr));
 
@@ -144,7 +150,7 @@ void app_main_loop_pkt_gen(void)
 
                 memcpy(rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr)), pull_hdr, sizeof(struct pkt_hdr));
 
-                RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %lu\n", pull_hdr->flags.pull ? "PULL" : "DATA", pull_hdr->flags.syn, pull_hdr->flags.pull ? "PULL number" : "SEQ number", pull_hdr->flags.pull ? pull_hdr->pull_number : pull_hdr->sequence_number);
+                RTE_LOG(DEBUG, SWITCH, "Sent pkt: %s, SYN = %d, %s = %lu\n", pull_hdr->flags.pull ? "PULL" : "DATA", pull_hdr->flags.syn, pull_hdr->flags.pull ? "PULL number" : "SEQ number", pull_hdr->flags.pull ? pull_hdr->pull_number : pull_hdr->sequence_number);
 
                 rte_ring_sp_enqueue(app.rings_tx, p);
                 pull_to_gen--;

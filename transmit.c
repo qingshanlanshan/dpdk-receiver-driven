@@ -143,4 +143,5 @@ void app_main_tx_port(struct rte_ring *ring)
     } while (k < n_mbufs);
 
     app.mbuf_tx.n_mbufs = 0;
+    rte_pktmbuf_free(pkt);
 }

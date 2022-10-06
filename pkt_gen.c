@@ -51,9 +51,6 @@ void app_main_loop_pkt_gen(void)
         int last_pull_number = -1;
         char *ret;
 
-
-
-
         // SYN pkt
         struct rte_mbuf *p = rte_pktmbuf_alloc(app.pool);
         struct pkt_hdr *data_hdr = (struct pkt_hdr *)malloc(sizeof(struct pkt_hdr));
@@ -114,15 +111,12 @@ void app_main_loop_pkt_gen(void)
 
             RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %lu\n", hdr->flags.pull ? "PULL" : "DATA", hdr->flags.syn, hdr->flags.pull ? "PULL number" : "SEQ number", hdr->flags.pull ? hdr->pull_number : hdr->sequence_number);
 
-
-            if (hdr->flags.pull)
+            RTE_LOG(DEBUG, SWITCH, "last_pull_number=%d,pull_to_gen=%d\n", last_pull_number, pull_to_gen);
+            
+            if (hdr->flags.pull && hdr->pull_number > last_pull_number)
             {
-                if (hdr->pull_number > last_pull_number)
-                {
-                    pull_to_gen += hdr->pull_number - last_pull_number;
-                    last_pull_number = hdr->pull_number;
-                    RTE_LOG(DEBUG,SWITCH,"last_pull_number=%d,pull_to_gen=%d\n",last_pull_number,pull_to_gen);
-                }
+                pull_to_gen += hdr->pull_number - last_pull_number;
+                last_pull_number = hdr->pull_number;
             }
         }
         free(data_hdr);
@@ -132,8 +126,8 @@ void app_main_loop_pkt_gen(void)
         uint64_t last_time = rte_get_tsc_cycles();
         app.cpu_freq[rte_lcore_id()] = rte_get_tsc_hz();
 
-        app.pull_gen_time = app.cpu_freq[rte_lcore_id()] / app.default_speed  * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char))/(1 << 20);
-        RTE_LOG(DEBUG,SWITCH,"cpu_freq=%lu, pull_gen_time=%lu\n",app.cpu_freq[rte_lcore_id()],app.pull_gen_time);
+        app.pull_gen_time = app.cpu_freq[rte_lcore_id()] / app.default_speed * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
+        RTE_LOG(DEBUG, SWITCH, "cpu_freq=%lu, pull_gen_time=%lu\n", app.cpu_freq[rte_lcore_id()], app.pull_gen_time);
         bool start = 0;
         int last_sequence_number = 0;
         int pull_to_gen = 10;
@@ -141,7 +135,7 @@ void app_main_loop_pkt_gen(void)
         struct app_mbuf_array *worker_mbuf;
         worker_mbuf = rte_malloc_socket(NULL, sizeof(struct app_mbuf_array),
                                         RTE_CACHE_LINE_SIZE, rte_socket_id());
-        uint64_t now_time=rte_get_tsc_cycles();
+        uint64_t now_time = rte_get_tsc_cycles();
         // int i;
         struct pkt_hdr *pull_hdr = (struct pkt_hdr *)malloc(sizeof(struct pkt_hdr));
 

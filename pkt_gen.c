@@ -87,16 +87,19 @@ void app_main_loop_pkt_gen(void)
         {
             if (pull_to_gen > 0)
             {
-                uint64_t now_time = rte_get_tsc_cycles();
+                // uint64_t now_time = rte_get_tsc_cycles();
                 // if (now_time - last_time < app.pull_gen_time)
                 //     continue;
-                last_time = now_time;
+                // last_time = now_time;
                 struct rte_mbuf *p = rte_pktmbuf_alloc(app.pool);
                 // struct pkt_hdr *data_hdr;
                 set_data_hdr(data_hdr, last_sequence_number++);
 
                 memcpy(rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr)), data_hdr, sizeof(struct pkt_hdr));
                 memset(rte_pktmbuf_append(p, sizeof(char) * app.data_size), 0, sizeof(char) * app.data_size);
+
+                RTE_LOG(DEBUG, SWITCH, "Sent pkt: %s, SYN = %d, %s = %lu\n", data_hdr->flags.pull ? "PULL" : "DATA", data_hdr->flags.syn, data_hdr->flags.pull ? "PULL number" : "SEQ number", data_hdr->flags.pull ? data_hdr->pull_number : data_hdr->sequence_number);
+
                 rte_ring_sp_enqueue(app.rings_tx, p);
                 pull_to_gen--;
             }
@@ -108,7 +111,10 @@ void app_main_loop_pkt_gen(void)
             if (ret == -ENOENT)
                 continue;
             struct pkt_hdr *hdr = rte_pktmbuf_mtod(worker_mbuf->array[0], struct pkt_hdr *);
+
             RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %lu\n", hdr->flags.pull ? "PULL" : "DATA", hdr->flags.syn, hdr->flags.pull ? "PULL number" : "SEQ number", hdr->flags.pull ? hdr->pull_number : hdr->sequence_number);
+
+
             if (hdr->flags.pull)
             {
                 if (hdr->pull_number > last_pull_number)

@@ -124,11 +124,12 @@ void app_main_loop_pkt_gen(void)
     {
         uint64_t last_time = rte_get_tsc_cycles();
         app.cpu_freq[rte_lcore_id()] = rte_get_tsc_hz();
-        app.pull_gen_time = app.cpu_freq[rte_lcore_id()] / (app.default_speed * (1 << 20)) * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char));
+
+        app.pull_gen_time = app.cpu_freq[rte_lcore_id()] / app.default_speed  * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char))/(1 << 20);
 
         bool start = 0;
         int last_sequence_number = 0;
-        int pull_to_gen = 0;
+        int pull_to_gen = 10;
         uint32_t pull_number = 0;
         struct app_mbuf_array *worker_mbuf;
         worker_mbuf = rte_malloc_socket(NULL, sizeof(struct app_mbuf_array),
@@ -176,7 +177,7 @@ void app_main_loop_pkt_gen(void)
                     continue;
                 }
             }
-            if (hdr->flags.end)
+            else if (hdr->flags.end)
             {
                 start = 0;
                 break;

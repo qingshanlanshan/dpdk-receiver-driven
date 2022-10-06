@@ -144,7 +144,7 @@ void app_main_loop_pkt_gen(void)
 
                 memcpy(rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr)), pull_hdr, sizeof(struct pkt_hdr));
 
-                rte_ring_sp_enqueue(app.rings_pull, p);
+                rte_ring_sp_enqueue(app.rings_tx, p);
                 pull_to_gen--;
             }
 

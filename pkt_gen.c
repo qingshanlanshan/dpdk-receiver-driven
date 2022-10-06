@@ -111,8 +111,8 @@ void app_main_loop_pkt_gen(void)
 
             RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %lu\n", hdr->flags.pull ? "PULL" : "DATA", hdr->flags.syn, hdr->flags.pull ? "PULL number" : "SEQ number", hdr->flags.pull ? hdr->pull_number : hdr->sequence_number);
 
-            RTE_LOG(DEBUG, SWITCH, "last_pull_number=%d,pull_to_gen=%d\n", last_pull_number, pull_to_gen);
-            
+            RTE_LOG(DEBUG, SWITCH, "last_pull_number=%d,pull_to_gen=%d,hdr->flags.pull=%d,hdr->pull_number=%d\n", last_pull_number, pull_to_gen,hdr->flags.pull,hdr->pull_number);
+
             if (hdr->flags.pull && hdr->pull_number > last_pull_number)
             {
                 pull_to_gen += hdr->pull_number - last_pull_number;

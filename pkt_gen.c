@@ -115,7 +115,8 @@ void app_main_loop_pkt_gen(void)
 
             if (hdr->flags.pull && hdr->pull_number > last_pull_number)
             {
-                pull_to_gen += hdr->pull_number - last_pull_number;
+                RTE_LOG(DEBUG,SWITCH,"reaches here\n");
+                pull_to_gen += (hdr->pull_number - last_pull_number);
                 last_pull_number = hdr->pull_number;
             }
         }

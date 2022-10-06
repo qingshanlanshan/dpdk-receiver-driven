@@ -85,7 +85,7 @@ void app_main_loop_pkt_gen(void)
 
         for (i = 0; !force_quit; i = ((i + 1) & (app.n_ports - 1)))
         {
-            if (pull_to_gen > 0)
+            if (pull_to_gen)
             {
                 // uint64_t now_time = rte_get_tsc_cycles();
                 // if (now_time - last_time < app.pull_gen_time)
@@ -121,6 +121,7 @@ void app_main_loop_pkt_gen(void)
                 {
                     pull_to_gen += hdr->pull_number - last_pull_number;
                     last_pull_number = hdr->pull_number;
+                    RTE_LOG(DEBUG,SWITCH,"last_pull_number=%d,pull_to_gen=%d\n",last_pull_number,pull_to_gen);
                 }
             }
         }

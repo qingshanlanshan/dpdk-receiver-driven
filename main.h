@@ -152,8 +152,6 @@ struct app_params
     uint32_t core_worker;
     uint32_t core_tx;
     uint32_t core_log;
-    uint32_t core_distribute;
-    // uint32_t core_pkt_in;
 
     /* Ports*/
     uint32_t ports;
@@ -192,7 +190,7 @@ struct app_params
     uint32_t qlen_pkts_in;
     uint32_t qlen_pkts_out;
     /* Rings */
-    struct rte_ring *rings_rx;
+    // struct rte_ring *rings_rx;
     struct rte_ring *rings_tx;
     uint32_t ring_rx_size;
     uint32_t ring_tx_size;

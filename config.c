@@ -329,17 +329,16 @@ int app_parse_args(int argc, char **argv)
     }
 
     // if (n_lcores != 2+app.n_ports) {
-    if (n_lcores < 5)
+    if (n_lcores < 4)
     {
-        RTE_LOG(ERR, SWITCH, "# of cores must be larger than 5.\n");
+        RTE_LOG(ERR, SWITCH, "# of cores must be larger than 4.\n");
         return -1;
     }
 
     app.core_rx = lcores[0];
     app.core_worker = lcores[1];
-    app.core_distribute = lcores[2];
-    app.core_log = lcores[3];
-    app.core_tx = lcores[4];
+    app.core_log = lcores[2];
+    app.core_tx = lcores[3];
 
     app.n_lcores = n_lcores;
     if (optind >= 0)

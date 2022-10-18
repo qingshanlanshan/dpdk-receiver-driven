@@ -134,14 +134,14 @@ app_init_rings(void)
 {
     app.ring_rx_size = (topower2(app.buff_size_bytes / MEAN_PKT_SIZE) << 2);
 
-    app.rings_rx = rte_ring_create(
-        "app_ring_rx",
-        app.ring_rx_size,
-        rte_socket_id(),
-        RING_F_SP_ENQ | RING_F_SC_DEQ);
+    // app.rings_rx = rte_ring_create(
+    //     "app_ring_rx",
+    //     app.ring_rx_size,
+    //     rte_socket_id(),
+    //     RING_F_SP_ENQ | RING_F_SC_DEQ);
 
-    if (app.rings_rx == NULL)
-        rte_panic("Cannot create RX ring\n");
+    // if (app.rings_rx == NULL)
+    //     rte_panic("Cannot create RX ring\n");
 
     for (int i = 0; i < app.n_flow; i++)
     {

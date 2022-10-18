@@ -117,11 +117,7 @@ int app_lcore_main_loop(__attribute__((unused)) void *arg)
         app_main_loop_rx();
         return 0;
     }
-    if (lcore == app.core_distribute)
-    {
-        app_main_loop_distribute();
-        return 0;
-    }
+
     if (lcore == app.core_worker)
     {
         app_main_loop_pkt_gen();

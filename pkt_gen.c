@@ -1,210 +1,56 @@
 #include "main.h"
-
-static void set_data_hdr(struct pkt_hdr *ack_hdr, uint32_t sequence_number)
-{
-    // ack_hdr->eth = app.hdr->eth;
-    // ack_hdr->ip = app.hdr->ip;
-    // ack_hdr->src_port = app.hdr->src_port;
-    // ack_hdr->dst_port = app.hdr->dst_port;
-    ack_hdr->flags.pull = 0;
-    ack_hdr->sequence_number = sequence_number;
-}
-static void set_pull_hdr(struct pkt_hdr *pull_hdr, uint32_t pull_number)
-{
-    // pull_hdr->eth = app.hdr->eth;
-    // pull_hdr->ip = app.hdr->ip;
-    // pull_hdr->src_port = app.hdr->src_port;
-    // pull_hdr->dst_port = app.hdr->dst_port;
-    pull_hdr->flags.pull = 1;
-    pull_hdr->pull_number = pull_number++;
-}
-static void __rte_unused set_ack_hdr(struct pkt_hdr *ack_hdr, uint32_t sequence_number, bool ack)
-{
-    // ack_hdr->eth = app.hdr->eth;
-    // ack_hdr->ip = app.hdr->ip;
-    // ack_hdr->src_port = app.hdr->src_port;
-    // ack_hdr->dst_port = app.hdr->dst_port;
-    ack_hdr->flags.pull = 0;
-    if (ack)
-    {
-        ack_hdr->flags.ack = 1;
-        ack_hdr->flags.nack = 0;
-    }
-    else
-    {
-        ack_hdr->flags.ack = 0;
-        ack_hdr->flags.nack = 1;
-    }
-    ack_hdr->sequence_number = sequence_number;
-}
+#include <sys/wait.h>
+#include <sys/prctl.h>
 
 void app_main_loop_pkt_gen(void)
 {
-    RTE_LOG(DEBUG, SWITCH, "%d\n", app.sender);
+    int flowid;
+    pid_t pid;
+    for (flowid = 0; flowid < app.n_flow - 1; flowid++)
+    {
+        if ((pid = fork()) < 0)
+        {
+            RTE_LOG(DEBUG, SWITCH, "flowid=%d, fork failed\n", flowid);
+        }
+        else if (pid == 0)
+        {
+            prctl(PR_SET_PDEATHSIG, SIGKILL);
+        }
+        else
+        {
+            break;
+        }
+    }
+    RTE_LOG(DEBUG, SWITCH, "pid=%d, flowid=%d\n", pid, flowid);
+
+    struct rdp_params *rdp = (struct rdp_params *)malloc(sizeof(struct rdp_params));
+    init(rdp);
+    rdp->flowid = flowid;
+    rdp->hdr.flowid = flowid;
     if (app.sender) // sender
     {
-        // uint64_t last_time = rte_get_tsc_cycles();
-        // app.cpu_freq[rte_lcore_id()] = rte_get_tsc_hz();
-        // app.default_speed = 100;
-        int last_sequence_number = 0;
-        int pull_to_gen = 0;
-        uint32_t last_pull_number = 0;
-        char *ret;
-
-        // SYN pkt
-        struct rte_mbuf *p = rte_pktmbuf_alloc(app.pool);
-        struct pkt_hdr *data_hdr = (struct pkt_hdr *)malloc(sizeof(struct pkt_hdr));
-
-        set_data_hdr(data_hdr, last_sequence_number++);
-        data_hdr->flags.syn = 1;
-
-        // header
-        ret = rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr));
-        RTE_LOG(DEBUG, SWITCH, "%u\n", ret);
-        memcpy(ret, data_hdr, sizeof(struct pkt_hdr));
-
-        // data
-        ret = rte_pktmbuf_append(p, sizeof(char) * app.data_size);
-        RTE_LOG(DEBUG, SWITCH, "%u, data size=%d\n", ret, app.data_size);
-        memset(ret, 0, sizeof(char) * app.data_size);
-
-        // check pkt
-        RTE_LOG(DEBUG, SWITCH, "%d, %lu\n", p->data_len, sizeof(struct pkt_hdr));
-        struct pkt_hdr *hdr = rte_pktmbuf_mtod(p, struct pkt_hdr *);
-        RTE_LOG(DEBUG, SWITCH, "syn=%d,seq=%d\n", hdr->flags.syn, hdr->sequence_number);
-
-        rte_ring_sp_enqueue(app.rings_tx, p);
-        data_hdr->flags.syn = 0;
-        struct app_mbuf_array *worker_mbuf;
-        uint32_t i;
-        worker_mbuf = rte_malloc_socket(NULL, sizeof(struct app_mbuf_array),
-                                        RTE_CACHE_LINE_SIZE, rte_socket_id());
-
-        for (i = 0; !force_quit; i = ((i + 1) & (app.n_ports - 1)))
-        {
-            if (pull_to_gen)
-            {
-                // uint64_t now_time = rte_get_tsc_cycles();
-                // if (now_time - last_time < app.pull_gen_time)
-                //     continue;
-                // last_time = now_time;
-                struct rte_mbuf *p = rte_pktmbuf_alloc(app.pool);
-                // struct pkt_hdr *data_hdr;
-                set_data_hdr(data_hdr, last_sequence_number++);
-
-                memcpy(rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr)), data_hdr, sizeof(struct pkt_hdr));
-                memset(rte_pktmbuf_append(p, sizeof(char) * app.data_size), 0, sizeof(char) * app.data_size);
-
-                RTE_LOG(DEBUG, SWITCH, "Sent pkt: %s, SYN = %d, %s = %u\n", data_hdr->flags.pull ? "PULL" : "DATA", data_hdr->flags.syn, data_hdr->flags.pull ? "PULL number" : "SEQ number", data_hdr->flags.pull ? data_hdr->pull_number : data_hdr->sequence_number);
-
-                rte_ring_sp_enqueue(app.rings_tx, p);
-                pull_to_gen--;
-            }
-
-            int ret = rte_ring_sc_dequeue(
-                app.rings_rx,
-                (void **)worker_mbuf->array);
-
-            if (ret == -ENOENT)
-                continue;
-            struct pkt_hdr *hdr = rte_pktmbuf_mtod(worker_mbuf->array[0], struct pkt_hdr *);
-
-            RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %u\n", hdr->flags.pull ? "PULL" : "DATA", hdr->flags.syn, hdr->flags.pull ? "PULL number" : "SEQ number", hdr->flags.pull ? hdr->pull_number : hdr->sequence_number);
-
-            RTE_LOG(DEBUG, SWITCH, "last_pull_number=%d,pull_to_gen=%d,hdr->flags.pull=%d,hdr->pull_number=%d\n", last_pull_number, pull_to_gen,hdr->flags.pull,hdr->pull_number);
-
-            if (hdr->flags.pull && hdr->pull_number > last_pull_number)
-            {
-                RTE_LOG(DEBUG,SWITCH,"reaches here\n");
-                pull_to_gen += (hdr->pull_number - last_pull_number);
-                last_pull_number = hdr->pull_number;
-            }
-        }
-        free(data_hdr);
-    }
-    else // receiver
-    {
-        uint64_t last_time = rte_get_tsc_cycles();
-        app.cpu_freq[rte_lcore_id()] = rte_get_tsc_hz();
-
-        app.pull_gen_time = app.cpu_freq[rte_lcore_id()] / app.default_speed * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
-        RTE_LOG(DEBUG, SWITCH, "cpu_freq=%lu, pull_gen_time=%lu\n", app.cpu_freq[rte_lcore_id()], app.pull_gen_time);
-        bool start = 0;
-        int last_sequence_number = 0,sequence_number=0;
-        int pull_to_gen = 10;
-        uint32_t pull_number = 0;
-        struct app_mbuf_array *worker_mbuf;
-        worker_mbuf = rte_malloc_socket(NULL, sizeof(struct app_mbuf_array),
-                                        RTE_CACHE_LINE_SIZE, rte_socket_id());
-        uint64_t now_time = rte_get_tsc_cycles();
-        // int i;
-        struct pkt_hdr *pull_hdr = (struct pkt_hdr *)malloc(sizeof(struct pkt_hdr));
+        S_preloop(rdp);
 
         while (!force_quit)
         {
-
-            now_time = rte_get_tsc_cycles();
-            if (start && pull_to_gen && now_time - last_time > app.pull_gen_time)
-            {
-                last_time = now_time;
-                struct rte_mbuf *p = rte_pktmbuf_alloc(app.pool);
-
-                set_pull_hdr(pull_hdr, pull_number++);
-
-                memcpy(rte_pktmbuf_prepend(p, sizeof(struct pkt_hdr)), pull_hdr, sizeof(struct pkt_hdr));
-
-                RTE_LOG(DEBUG, SWITCH, "Sent pkt: %s, SYN = %d, %s = %u\n", pull_hdr->flags.pull ? "PULL" : "DATA", pull_hdr->flags.syn, pull_hdr->flags.pull ? "PULL number" : "SEQ number", pull_hdr->flags.pull ? pull_hdr->pull_number : pull_hdr->sequence_number);
-
-                rte_ring_sp_enqueue(app.rings_tx, p);
-                pull_to_gen--;
-            }
-
-            int ret = rte_ring_sc_dequeue(
-                app.rings_rx,
-                (void **)worker_mbuf->array);
-
-            if (ret == -ENOENT)
-                continue;
-            struct pkt_hdr *hdr = rte_pktmbuf_mtod(worker_mbuf->array[0], struct pkt_hdr *);
-            RTE_LOG(DEBUG, SWITCH, "Received pkt: %s, SYN = %d, %s = %u\n", hdr->flags.pull ? "PULL" : "DATA", hdr->flags.syn, hdr->flags.pull ? "PULL number" : "SEQ number", hdr->flags.pull ? hdr->pull_number : hdr->sequence_number);
-            if (!start)
-            {
-                start = hdr->flags.syn;
-                if (start)
-                {
-                    pull_to_gen++;
-                }
-                else
-                {
-                    continue;
-                }
-            }
-            else if (hdr->flags.end)
-            {
-                start = 0;
-                break;
-            }
-            else
-            {
-                sequence_number=hdr->sequence_number;
-                if(sequence_number>last_sequence_number)
-                pull_to_gen+=(sequence_number-last_sequence_number);
-                last_sequence_number=sequence_number;
-            }
-
-            // ack and nack
-
-            // struct rte_mbuf *p = rte_pktmbuf_alloc(app.pool);
-            // struct pkt_hdr *ack_hdr;
-            // if (hdr->sequence_number - last_sequence_number > 1)
-            //     set_ack_hdr(ack_hdr, hdr->sequence_number, 0);
-            // else
-            //     set_ack_hdr(ack_hdr, hdr->sequence_number, 1);
-
-            // memcpy(rte_pktmbuf_mtod(p, void *), ack_hdr, sizeof(struct pkt_hdr));
-
-            // rte_ring_sp_enqueue(app.rings_pull, p);
+            S_loop(rdp);
         }
-        free(pull_hdr);
+    }
+    else // receiver
+    {
+        R_preloop(rdp);
+        while (!force_quit)
+        {
+            R_loop(rdp);
+        }
+    }
+
+    if (flowid = app.n_flow - 1)
+    {
+        exit(0);
+    }
+    else
+    {
+        wait(0);
     }
 }

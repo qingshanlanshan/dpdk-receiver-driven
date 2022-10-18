@@ -53,11 +53,17 @@ app_quit(void)
     printf("App quit. Bye...\n");
 }
 
-int main(int argc, char **argv)
+int main(int a, char **b)
 {
     uint32_t lcore;
     int ret;
 
+    int argc = a - 2;
+    char **argv = (char **)malloc(sizeof(char *) * argc);
+    for (int i = 0; i < argc; ++i)
+    {
+        argv[i] = b[i];
+    }
     /* Init EAL */
     ret = rte_eal_init(argc, argv);
     if (ret < 0)
@@ -76,10 +82,12 @@ int main(int argc, char **argv)
         app_print_usage();
         return -1;
     }
-
+    app.sender = atoi(b[a - 2]);
+    app.n_flow = atoi(b[a - 1]);
     /* Init */
     app_init();
 
+    RTE_LOG(DEBUG, SWITCH, "%s: flow number = %d\n", app.sender ? "sender" : "receiver", app.n_flow);
     app.start_cycle = rte_get_tsc_cycles();
     /* Launch per-lcore init on every lcore */
 
@@ -109,7 +117,11 @@ int app_lcore_main_loop(__attribute__((unused)) void *arg)
         app_main_loop_rx();
         return 0;
     }
-
+    if (lcore == app.core_distribute)
+    {
+        app_main_loop_distribute();
+        return 0;
+    }
     if (lcore == app.core_worker)
     {
         app_main_loop_pkt_gen();
@@ -126,5 +138,6 @@ int app_lcore_main_loop(__attribute__((unused)) void *arg)
         app_main_loop_test();
         return 0;
     }
+
     return 0;
 }

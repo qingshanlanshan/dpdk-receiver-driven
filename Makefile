@@ -55,6 +55,9 @@ SRCS-y += transmit.c
 SRCS-y += output_queue.c
 SRCS-y += pkt_gen.c
 SRCS-y += log.c
+SRCS-y += rdp.c
+SRCS-y += rdp_helper.c
+SRCS-y += distribute.c
 
 include $(RTE_SDK)/mk/rte.extapp.mk
 

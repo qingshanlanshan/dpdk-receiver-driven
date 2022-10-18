@@ -47,7 +47,9 @@ struct app_params app = {
     .tx_rate_mbps = 0,
     .bucket_size = 3200,
 };
-
+// struct rdp_params rdp = {
+//     .expected_sequence_number = 0,
+// };
 static struct rte_eth_conf port_conf = {
     .rxmode = {
         .split_hdr_size = 0,
@@ -130,8 +132,6 @@ app_init_mbuf_pools(void)
 static void
 app_init_rings(void)
 {
-    // uint32_t i;
-
     app.ring_rx_size = (topower2(app.buff_size_bytes / MEAN_PKT_SIZE) << 2);
 
     app.rings_rx = rte_ring_create(
@@ -142,6 +142,22 @@ app_init_rings(void)
 
     if (app.rings_rx == NULL)
         rte_panic("Cannot create RX ring\n");
+
+    for (int i = 0; i < app.n_flow; i++)
+    {
+        char name[32];
+
+        snprintf(name, sizeof(name), "app_ring_flow_%u", i);
+
+        app.rings_flow[i] = rte_ring_create(
+            name,
+            app.ring_rx_size,
+            rte_socket_id(),
+            RING_F_SP_ENQ | RING_F_SC_DEQ);
+
+        if (app.rings_flow[i] == NULL)
+            rte_panic("Cannot create flow ring %u\n", i);
+    }
 
     app.ring_tx_size = (topower2(app.buff_size_bytes / MEAN_PKT_SIZE) << 2);
 

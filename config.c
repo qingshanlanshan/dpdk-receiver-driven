@@ -239,16 +239,12 @@ app_read_config_file(const char *fname)
             __func__, app_cfg.bucket_size, ETHER_MAX_LEN);
     }
 
-    app.sender = app_cfg.sender;
-    // set it here
-    app.sender = 0;
-    RTE_LOG(DEBUG,SWITCH,"%d,%d\n",app_cfg.sender,app_cfg.default_speed);
-    app.data_size = 1500-sizeof(struct pkt_hdr);
+    app.data_size = 1500 - sizeof(struct pkt_hdr);
     app.default_speed = app_cfg.default_speed;
     RTE_LOG(
         INFO, SWITCH,
-        "%s: host=%s, data_size = %d, default_speed = %d\n",
-        __func__, app.sender?"sender":"receiver", app.data_size, app.default_speed);
+        "%s: data_size = %d, default_speed = %d\n",
+        __func__, app.data_size, app.default_speed);
     cfg_free(app_cfg.cfg);
     free(app_cfg.bm_policy);
     free(app_cfg.qlen_fname);
@@ -333,16 +329,17 @@ int app_parse_args(int argc, char **argv)
     }
 
     // if (n_lcores != 2+app.n_ports) {
-    if (n_lcores < 4)
+    if (n_lcores < 5)
     {
-        RTE_LOG(ERR, SWITCH, "# of cores must be larger than 3.\n");
+        RTE_LOG(ERR, SWITCH, "# of cores must be larger than 5.\n");
         return -1;
     }
 
     app.core_rx = lcores[0];
     app.core_worker = lcores[1];
-    app.core_tx = lcores[2];
+    app.core_distribute = lcores[2];
     app.core_log = lcores[3];
+    app.core_tx = lcores[4];
 
     app.n_lcores = n_lcores;
     if (optind >= 0)

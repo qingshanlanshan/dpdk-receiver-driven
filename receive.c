@@ -4,7 +4,7 @@ void app_main_loop_rx(void)
 {
     uint32_t i;
     int ret;
-
+    struct pkt_hdr *hdr;
     RTE_LOG(INFO, SWITCH, "Core %u is doing RX\n", rte_lcore_id());
 
     app.cpu_freq[rte_lcore_id()] = rte_get_tsc_hz();
@@ -24,17 +24,19 @@ void app_main_loop_rx(void)
                 "%s: receive %u packets from port %u\n",
                 __func__, n_mbufs, app.ports);
         }
-        struct pkt_hdr *hdr = rte_pktmbuf_mtod(app.mbuf_rx.array[0], struct pkt_hdr *);
 
         if (n_mbufs == 0)
             continue;
 
-        do
+        for (int i = 0; i < n_mbufs; ++i)
         {
-            ret = rte_ring_sp_enqueue_bulk(
-                app.rings_flow[hdr->flowid],
-                (void **)app.mbuf_rx.array,
-                n_mbufs, NULL);
-        } while (ret == 0);
+            hdr = rte_pktmbuf_mtod(app.mbuf_rx.array[i], struct pkt_hdr *);
+            do
+            {
+                ret = rte_ring_sp_enqueue(
+                    app.rings_flow[hdr->flowid],
+                    app.mbuf_rx.array[i]);
+            } while (ret == -ENOBUFS);
+        }
     }
 }

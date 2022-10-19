@@ -150,7 +150,7 @@ struct app_params
     /* CPU cores */
     uint32_t n_lcores;
     uint32_t core_rx;
-    uint32_t core_worker;
+    uint32_t core_worker[RTE_MAX_LCORE];
     uint32_t core_tx;
     uint32_t core_log;
 
@@ -260,6 +260,7 @@ void app_main_tx_port(struct rte_ring *);
 void app_main_loop_pkt_gen(void);
 void app_main_loop_test(void);
 void app_main_loop_distribute(void);
+void app_main_loop_pkt_gen_each_flow(int);
 // void app_main_loop_in_pkt(void);
 struct header
 {

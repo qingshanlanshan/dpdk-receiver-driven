@@ -57,7 +57,8 @@ int main(int a, char **b)
 {
     uint32_t lcore;
     int ret;
-
+    app.sender = atoi(b[a - 2]);
+    app.n_flow = atoi(b[a - 1]);
     int argc = a - 2;
     char **argv = (char **)malloc(sizeof(char *) * argc);
     for (int i = 0; i < argc; ++i)
@@ -82,8 +83,7 @@ int main(int a, char **b)
         app_print_usage();
         return -1;
     }
-    app.sender = atoi(b[a - 2]);
-    app.n_flow = atoi(b[a - 1]);
+
     /* Init */
     app_init();
 
@@ -118,11 +118,11 @@ int app_lcore_main_loop(__attribute__((unused)) void *arg)
         return 0;
     }
 
-    if (lcore == app.core_worker)
-    {
-        app_main_loop_pkt_gen();
-        return 0;
-    }
+    // if (lcore == app.core_worker)
+    // {
+    //     app_main_loop_pkt_gen();
+    //     return 0;
+    // }
 
     if (lcore == app.core_tx)
     {
@@ -133,6 +133,20 @@ int app_lcore_main_loop(__attribute__((unused)) void *arg)
     {
         app_main_loop_test();
         return 0;
+    }
+
+    if (app.n_lcores >= 3+app.n_flow) {
+        for (int i = 0; i < app.n_flow; i++) {
+            if (lcore == app.core_worker[i]) {
+                app_main_loop_pkt_gen_each_flow(i);
+                return 0;
+            }
+        }
+    } else {
+        if (lcore == app.core_worker[0]) {
+            app_main_loop_pkt_gen();
+            return 0;
+        }
     }
 
     return 0;

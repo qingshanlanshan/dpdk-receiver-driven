@@ -52,7 +52,7 @@ void S_loop(struct rdp_params *rdp)
         }
     }
 }
-void S_postloop(struct rdp_params *rdp)
+__rte_unused void S_postloop(__rte_unused struct rdp_params *rdp)
 {
 
 }
@@ -95,7 +95,7 @@ void R_loop(struct rdp_params *rdp)
         }
     }
 }
-void R_postloop(struct rdp_params *rdp)
+__rte_unused void R_postloop(__rte_unused struct rdp_params *rdp)
 {
     
 }

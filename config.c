@@ -328,7 +328,7 @@ int app_parse_args(int argc, char **argv)
         n_lcores++;
     }
 
-    // if (n_lcores != 2+app.n_ports) {
+    // if (n_lcores != 3+app.n_ports) {
     if (n_lcores < 4)
     {
         RTE_LOG(ERR, SWITCH, "# of cores must be larger than 4.\n");
@@ -336,10 +336,20 @@ int app_parse_args(int argc, char **argv)
     }
 
     app.core_rx = lcores[0];
-    app.core_worker = lcores[1];
-    app.core_log = lcores[2];
-    app.core_tx = lcores[3];
-
+    // app.core_worker = lcores[1];
+    app.core_log = lcores[1];
+    app.core_tx = lcores[2];
+    if (n_lcores >= 3 + app.n_flow)
+    {
+        for (int i = 0; i < n_lcores - 3; i++)
+        {
+            app.core_worker[i] = lcores[i + 3];
+        }
+    }
+    else
+    {
+        app.core_worker[0] = lcores[3];
+    }
     app.n_lcores = n_lcores;
     if (optind >= 0)
         argv[optind - 1] = prgname;

@@ -80,6 +80,7 @@
 #include <rte_malloc.h>
 #include <rte_hash.h>
 #include <rte_hash_crc.h>
+#include <rte_memcpy.h>
 
 #ifndef APP_MBUF_ARRAY_SIZE
 #define APP_MBUF_ARRAY_SIZE 256
@@ -340,9 +341,9 @@ struct rdp_params
 // extern struct rdp_params rdp;
 
 struct rte_mbuf *new_pkt(void);
-void set_hdr(PKT *p, struct pkt_hdr *hdr);
-void set_data_zero(PKT *p, int data_size);
-void set_data(PKT *p, char *data, int data_size);
+void prepend_hdr(PKT *p, struct pkt_hdr *hdr);
+void append_data_zero(PKT *p, int data_size);
+void append_data(PKT *p, char *data, int data_size);
 void enqueue_pkt(PKT *p);
 struct pkt_hdr *rcv_pkt(struct rdp_params *);
 
@@ -351,8 +352,10 @@ void rdp_sender(void);
 void rdp_receiver(void);
 void S_preloop(struct rdp_params*);
 void S_loop(struct rdp_params*);
+void S_postloop(struct rdp_params*);
 void R_preloop(struct rdp_params*);
 void R_loop(struct rdp_params*);
+void R_postloop(struct rdp_params*);
 
 #define APP_FLUSH 0
 #ifndef APP_FLUSH

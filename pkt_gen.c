@@ -23,7 +23,8 @@ void app_main_loop_pkt_gen(void)
     }
     RTE_LOG(DEBUG, SWITCH, "pid=%d, flowid=%d\n", pid, flowid);
 
-    struct rdp_params *rdp = (struct rdp_params *)malloc(sizeof(struct rdp_params));
+    // struct rdp_params *rdp = (struct rdp_params *)malloc(sizeof(struct rdp_params));
+    struct rdp_params *rdp = rte_malloc_socket(NULL, sizeof(struct rdp_params),RTE_CACHE_LINE_SIZE, rte_socket_id());
     init(rdp);
     rdp->flowid = flowid;
     rdp->hdr.flowid = flowid;
@@ -35,6 +36,7 @@ void app_main_loop_pkt_gen(void)
         {
             S_loop(rdp);
         }
+        S_postloop(rdp);
     }
     else // receiver
     {
@@ -43,6 +45,7 @@ void app_main_loop_pkt_gen(void)
         {
             R_loop(rdp);
         }
+        R_postloop(rdp);
     }
 
     if (flowid = app.n_flow - 1)

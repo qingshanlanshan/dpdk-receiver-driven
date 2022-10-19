@@ -9,7 +9,6 @@ void init(struct rdp_params *rdp)
     rdp->send = 1;
     rdp->timestamp = 0;
     rdp->worker_mbuf = rte_malloc_socket(NULL, sizeof(struct app_mbuf_array),RTE_CACHE_LINE_SIZE, rte_socket_id());
-    // rdp->worker_mbuf=rte_malloc(NULL,sizeof(HDR)+sizeof(char)*app.data_size,RTE_CACHE_LINE_SIZE);
 }
 
 void S_preloop(struct rdp_params *rdp)
@@ -18,8 +17,8 @@ void S_preloop(struct rdp_params *rdp)
     for (int i = 0; i < 10 && !force_quit; ++i)
     {
         PKT *p = new_pkt();
-        set_hdr(p, &rdp->hdr);
-        set_data_zero(p, app.data_size);
+        prepend_hdr(p, &rdp->hdr);
+        append_data_zero(p, app.data_size);
         enqueue_pkt(p);
     }
     rdp->hdr.flags.syn = 0;
@@ -31,8 +30,8 @@ void S_loop(struct rdp_params *rdp)
     {
         PKT *p = new_pkt();
         rdp->hdr.sequence_number++;
-        set_hdr(p, &rdp->hdr);
-        set_data_zero(p, app.data_size);
+        prepend_hdr(p, &rdp->hdr);
+        append_data_zero(p, app.data_size);
         enqueue_pkt(p);
         rdp->n_pull--;
     }
@@ -52,6 +51,10 @@ void S_loop(struct rdp_params *rdp)
             rdp->send = 1;
         }
     }
+}
+void S_postloop(struct rdp_params *rdp)
+{
+
 }
 
 void R_preloop(struct rdp_params *rdp)
@@ -77,7 +80,7 @@ void R_loop(struct rdp_params *rdp)
     {
         rdp->timestamp = now_time;
         PKT *p = new_pkt();
-        set_hdr(p, &rdp->hdr);
+        prepend_hdr(p, &rdp->hdr);
         rdp->hdr.sequence_number++;
         enqueue_pkt(p);
         rdp->n_pull--;
@@ -91,4 +94,8 @@ void R_loop(struct rdp_params *rdp)
             rdp->send = 0;
         }
     }
+}
+void R_postloop(struct rdp_params *rdp)
+{
+    
 }

@@ -56,7 +56,7 @@ void app_main_loop_pkt_gen(void)
 void app_main_loop_pkt_gen_each_flow(int i)
 {
     int flowid=i;
-    RTE_LOG(DEBUG, SWITCH, "lcore=%d, flowid=%d\n", i+3, flowid);
+    RTE_LOG(INFO, SWITCH, "lcore=%d, flowid=%d\n", i+3, flowid);
 
     struct rdp_params *rdp = rte_malloc_socket(NULL, sizeof(struct rdp_params),RTE_CACHE_LINE_SIZE, rte_socket_id());
     init(rdp);

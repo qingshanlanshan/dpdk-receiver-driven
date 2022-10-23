@@ -59,7 +59,7 @@ void init(struct rdp_params *rdp)
     rdp->info->n_pull = 0;
     rdp->info->send = 1;
     rdp->info->timestamp = rte_get_tsc_cycles();
-    rdp->info->pull_gen_time = rdp->cpu_freq / app.default_speed * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
+    rdp->info->pull_gen_time = 1.0*rdp->cpu_freq / app.default_speed * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
     rdp->info->RTT = 0;
     rdp->info->last_credit_feedback_ts = 0;
     rdp->info->w = 0.5;
@@ -211,7 +211,7 @@ void R_loop(struct rdp_params *rdp)
             rdp->info->w = rdp->info->w > 0.01 ? rdp->info->w : 0.01;
             rdp->info->phase = 0;
         }
-        rdp->info->pull_gen_time = rdp->cpu_freq / rdp->info->cur_rate * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
+        rdp->info->pull_gen_time = 1.0*rdp->cpu_freq / rdp->info->cur_rate * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
     }
 }
 

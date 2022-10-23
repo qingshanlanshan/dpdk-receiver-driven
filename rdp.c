@@ -71,7 +71,7 @@ void init(struct rdp_params *rdp)
     rdp->info->rtx_ts = rte_get_tsc_cycles();
     rdp->info->phase = 1;
     rdp->info->list = rte_malloc_socket(NULL, sizeof(struct rcved_seq), RTE_CACHE_LINE_SIZE, rte_socket_id());
-    rdp->info->list = NULL;
+    rdp->info->list->next = NULL;
 }
 
 void S_preloop(struct rdp_params *rdp)

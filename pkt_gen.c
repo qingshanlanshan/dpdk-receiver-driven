@@ -23,10 +23,12 @@ void app_main_loop_pkt_gen(void)
     }
     RTE_LOG(DEBUG, SWITCH, "pid=%d, flowid=%d\n", pid, flowid);
 
-    struct rdp_params *rdp = rte_malloc_socket(NULL, sizeof(struct rdp_params),RTE_CACHE_LINE_SIZE, rte_socket_id());
-    init(rdp);
+    struct rdp_params *rdp = rte_malloc_socket(NULL, sizeof(struct rdp_params), RTE_CACHE_LINE_SIZE, rte_socket_id());
+    rdp->worker_mbuf = rte_malloc_socket(NULL, sizeof(struct app_mbuf_array),RTE_CACHE_LINE_SIZE, rte_socket_id());
     rdp->flowid = flowid;
-    rdp->hdr.flowid = flowid;
+    
+    init(rdp);
+    
 
     if (app.sender) // sender
     {
@@ -55,13 +57,13 @@ void app_main_loop_pkt_gen(void)
 
 void app_main_loop_pkt_gen_each_flow(int i)
 {
-    int flowid=i;
-    RTE_LOG(INFO, SWITCH, "lcore=%d, flowid=%d\n", i+3, flowid);
+    RTE_LOG(INFO, SWITCH, "lcore=%d, flowid=%d\n", i + 3, i);
 
-    struct rdp_params *rdp = rte_malloc_socket(NULL, sizeof(struct rdp_params),RTE_CACHE_LINE_SIZE, rte_socket_id());
+    struct rdp_params *rdp = rte_malloc_socket(NULL, sizeof(struct rdp_params), RTE_CACHE_LINE_SIZE, rte_socket_id());
+    rdp->worker_mbuf = rte_malloc_socket(NULL, sizeof(struct app_mbuf_array),RTE_CACHE_LINE_SIZE, rte_socket_id());
+    rdp->flowid = i;
+    rdp->cpu_freq=rte_get_tsc_hz();
     init(rdp);
-    rdp->flowid = flowid;
-    rdp->hdr.flowid = flowid;
 
     if (app.sender) // sender
     {

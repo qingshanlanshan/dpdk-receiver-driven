@@ -307,14 +307,11 @@ uint32_t qlen_threshold_dt(void);
 #define PKT struct rte_mbuf
 #define HDR struct pkt_hdr
 
-
-
 struct pkt_hdr
 {
-    // struct ether_hdr eth;
-    // struct ipv4_hdr ip;
-    // uint32_t src_port;
-    // uint32_t dst_port;
+    struct header std_header;
+    uint32_t sequence_number;
+    uint32_t ack_number;
     struct
     {
         bool pull; // 0=data 1=pull
@@ -324,39 +321,36 @@ struct pkt_hdr
         bool nack;
         bool stop;
     } flags;
-    uint32_t sequence_number;
     int flowid;
-
 } __attribute__((packed));
 
 struct rdp_params
 {
-    uint64_t expected_sequence_number;
-    struct pkt_hdr hdr;
-    uint64_t n_pull;
-    bool send;
-    uint64_t timestamp;
-    struct app_mbuf_array *worker_mbuf;
     int flowid;
+    struct app_mbuf_array *worker_mbuf;
+    struct rdp_info *info;
+    uint64_t cpu_freq;
 };
 // extern struct rdp_params rdp;
 
 struct rte_mbuf *new_pkt(void);
-void prepend_hdr(PKT *p, struct pkt_hdr *hdr);
-void append_data_zero(PKT *p, int data_size);
-void append_data(PKT *p, char *data, int data_size);
-void enqueue_pkt(PKT *p);
-struct pkt_hdr *rcv_pkt(struct rdp_params *);
+void prepend_hdr(PKT *, struct pkt_hdr *);
+void append_data_zero(PKT *, int);
+void append_data(PKT *, char *, int);
+void enqueue_pkt(PKT *);
+PKT *rcv_pkt(struct rdp_params *);
+HDR *get_hdr(PKT *);
+char *get_data(PKT *);
 
 void init(struct rdp_params *);
 void rdp_sender(void);
 void rdp_receiver(void);
-void S_preloop(struct rdp_params*);
-void S_loop(struct rdp_params*);
-void S_postloop(struct rdp_params*);
-void R_preloop(struct rdp_params*);
-void R_loop(struct rdp_params*);
-void R_postloop(struct rdp_params*);
+void S_preloop(struct rdp_params *);
+void S_loop(struct rdp_params *);
+void S_postloop(struct rdp_params *);
+void R_preloop(struct rdp_params *);
+void R_loop(struct rdp_params *);
+void R_postloop(struct rdp_params *);
 
 #define APP_FLUSH 0
 #ifndef APP_FLUSH

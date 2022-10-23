@@ -1,5 +1,5 @@
 #include <signal.h>
-
+#include <stdio.h>
 #include "main.h"
 
 volatile bool force_quit;
@@ -55,20 +55,22 @@ app_quit(void)
 
 int main(int a, char **b)
 {
+
     uint32_t lcore;
     int ret;
-    app.sender = atoi(b[a - 2]);
-    app.n_flow = atoi(b[a - 1]);
-    int argc = a - 2;
+    int argc = a - 6;
     char **argv = (char **)malloc(sizeof(char *) * argc);
     for (int i = 0; i < argc; ++i)
     {
         argv[i] = b[i];
+        printf("%s ", argv[i]);
     }
+    printf("\n");
     /* Init EAL */
     ret = rte_eal_init(argc, argv);
     if (ret < 0)
         return -1;
+
     argc -= ret;
     argv += ret;
 
@@ -84,10 +86,45 @@ int main(int a, char **b)
         return -1;
     }
 
+
+
+    char *optstr = "s:r:f:";
+    struct option opts[] = {
+        {"sender", 1, NULL, 's'},
+        {"default_speed", 1, NULL, 'r'},
+        {"n_flow", 1, NULL, 'f'},
+        {0, 0, 0, 0},
+    };
+    int opt;
+    char **argv1 = (char **)malloc(sizeof(char *) * 7);
+    for (int i = 0; i < 7; ++i)
+    {
+        argv1[i] = b[a-7+i];
+        printf("%s ", argv1[i]);
+    }
+    printf("\n");
+
+    while ((opt = getopt_long(7, argv1, optstr, opts, NULL)) != -1)
+    {
+        switch (opt)
+        {
+        case 's':
+            app.sender = atoi(optarg);
+            break;
+        case 'r':
+            app.default_speed = atoi(optarg);
+            break;
+        case 'f':
+            app.n_flow = atoi(optarg);
+            break;
+        default:
+            continue;
+        }
+    }
+    
     /* Init */
     app_init();
-
-    RTE_LOG(DEBUG, SWITCH, "%s: flow number = %d\n", app.sender ? "sender" : "receiver", app.n_flow);
+    RTE_LOG(INFO, SWITCH, "%s: flow number = %d, default speed=%dMbps\n", app.sender ? "sender" : "receiver", app.n_flow,app.default_speed);
     app.start_cycle = rte_get_tsc_cycles();
     /* Launch per-lcore init on every lcore */
 
@@ -135,15 +172,21 @@ int app_lcore_main_loop(__attribute__((unused)) void *arg)
         return 0;
     }
 
-    if (app.n_lcores >= 3+app.n_flow) {
-        for (int i = 0; i < app.n_flow; i++) {
-            if (lcore == app.core_worker[i]) {
+    if (app.n_lcores >= 3 + app.n_flow)
+    {
+        for (int i = 0; i < app.n_flow; i++)
+        {
+            if (lcore == app.core_worker[i])
+            {
                 app_main_loop_pkt_gen_each_flow(i);
                 return 0;
             }
         }
-    } else {
-        if (lcore == app.core_worker[0]) {
+    }
+    else
+    {
+        if (lcore == app.core_worker[0])
+        {
             app_main_loop_pkt_gen();
             return 0;
         }

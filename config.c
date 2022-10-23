@@ -240,11 +240,11 @@ app_read_config_file(const char *fname)
     }
 
     app.data_size = 1500 - sizeof(struct pkt_hdr);
-    app.default_speed = app_cfg.default_speed;
-    RTE_LOG(
-        INFO, SWITCH,
-        "%s: data_size = %d, default_speed = %d\n",
-        __func__, app.data_size, app.default_speed);
+    // app.default_speed = app_cfg.default_speed;
+    // RTE_LOG(
+    //     INFO, SWITCH,
+    //     "%s: data_size = %d, default_speed = %d\n",
+    //     __func__, app.data_size, app.default_speed);
     cfg_free(app_cfg.cfg);
     free(app_cfg.bm_policy);
     free(app_cfg.qlen_fname);

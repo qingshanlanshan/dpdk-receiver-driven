@@ -192,7 +192,7 @@ void R_loop(struct rdp_params *rdp)
     //     del(rdp->info->list, 0, 1);
     // }
     now_time = rte_get_tsc_cycles();
-    if (now_time - rdp->info->last_credit_feedback_ts > rdp->info->RTT*10)
+    if (now_time - rdp->info->last_credit_feedback_ts > rdp->cpu_freq/20000)
     {
         rdp->info->last_credit_feedback_ts=now_time;
         double credit_loss = 1.0 * rdp->info->credit_dropped / rdp->info->credit_tot;

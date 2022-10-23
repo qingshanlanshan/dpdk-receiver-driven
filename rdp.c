@@ -156,14 +156,7 @@ void R_loop(struct rdp_params *rdp)
         rdp->info->hdr.sequence_number++;
         rdp->info->timestamp = now_time;
         prepend_hdr(p, &rdp->info->hdr);
-        if (enqueue_pkt(p) == 0)
-        {
-            RTE_LOG(INFO, SWITCH, "Enqueue success\n");
-        }
-        else
-        {
-            RTE_LOG(INFO, SWITCH, "Enqueue failed\n");
-        }
+        enqueue_pkt(p);
     }
     HDR *hdr = get_hdr(rcv_pkt(rdp));
     if (hdr)

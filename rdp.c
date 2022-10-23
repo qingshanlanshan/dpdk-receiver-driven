@@ -170,8 +170,8 @@ void R_loop(struct rdp_params *rdp)
             while (!force_quit && del(rdp->info->list, rdp->info->expected_sequence_number, 0))
             {
                 rdp->info->expected_sequence_number++;
+                rdp->info->rtx_ts = rte_get_tsc_cycles();
             }
-            rdp->info->rtx_ts = rte_get_tsc_cycles();
         }
         else if (hdr->sequence_number > rdp->info->expected_sequence_number)
         {
@@ -180,7 +180,7 @@ void R_loop(struct rdp_params *rdp)
         }
         else
         {
-            RTE_LOG(WARNING, SWITCH, "pkt seq < expected seq");
+            RTE_LOG(WARNING, SWITCH, "pkt seq < expected seq\n");
         }
     }
     now_time = rte_get_tsc_cycles();

@@ -188,9 +188,7 @@ void R_loop(struct rdp_params *rdp)
     {
         rdp->info->hdr.sequence_number = rdp->info->expected_sequence_number;
         rdp->info->rtx_ts = now_time;
-        while (!force_quit && del(rdp->info->list, 0, 1))
-        {
-        }
+        del(rdp->info->list, 0, 1);
     }
     now_time = rte_get_tsc_cycles();
     if (now_time - rdp->info->last_credit_feedback_ts > rdp->info->RTT)

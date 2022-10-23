@@ -28,7 +28,7 @@ bool del(struct rcved_seq *l, uint32_t seq, bool any)
         }
         p = p->next;
     }
-    return any;
+    return 0;
 }
 struct rdp_info
 {

@@ -177,7 +177,7 @@ void R_loop(struct rdp_params *rdp)
         {
             rdp->info->credit_dropped += (hdr->sequence_number - rdp->info->expected_sequence_number);
             // append(rdp->info->list, hdr->sequence_number);
-            rdp->info->hdr.sequence_number = rdp->info->expected_sequence_number;
+            rdp->info->hdr.sequence_number = rdp->info->expected_sequence_number-1;
         }
         else
         {

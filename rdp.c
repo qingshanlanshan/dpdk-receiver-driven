@@ -48,6 +48,7 @@ struct rdp_info
     uint64_t rtx_ts;
     bool phase;
     struct rcved_seq *list;
+    bool lock;
 };
 
 // module required functions
@@ -69,6 +70,7 @@ void init(struct rdp_params *rdp)
     rdp->info->credit_dropped = 0;
     rdp->info->rtx_ts = rte_get_tsc_cycles();
     rdp->info->phase = 1;
+    rdp->info->lock = 0;
     // rdp->info->list = rte_malloc_socket(NULL, sizeof(struct rcved_seq), RTE_CACHE_LINE_SIZE, rte_socket_id());
     // rdp->info->list->next = NULL;
 }
@@ -172,14 +174,16 @@ void R_loop(struct rdp_params *rdp)
             //     rdp->info->expected_sequence_number++;
             //     rdp->info->rtx_ts = rte_get_tsc_cycles();
             // }
+            rdp->info->lock = 0;
         }
-        else if (hdr->sequence_number > rdp->info->expected_sequence_number)
+        else if (!rdp->info->lock && hdr->sequence_number > rdp->info->expected_sequence_number)
         {
             rdp->info->credit_dropped += (hdr->sequence_number - rdp->info->expected_sequence_number);
             // append(rdp->info->list, hdr->sequence_number);
-            rdp->info->hdr.sequence_number = rdp->info->expected_sequence_number-1;
+            rdp->info->hdr.sequence_number = rdp->info->expected_sequence_number - 1;
+            rdp->info->lock = 1;
         }
-        else
+        else if (hdr->sequence_number < rdp->info->expected_sequence_number)
         {
             RTE_LOG(WARNING, SWITCH, "pkt seq < expected seq\n");
         }
@@ -192,9 +196,9 @@ void R_loop(struct rdp_params *rdp)
     //     del(rdp->info->list, 0, 1);
     // }
     now_time = rte_get_tsc_cycles();
-    if (now_time - rdp->info->last_credit_feedback_ts > rdp->cpu_freq/20000)
+    if (now_time - rdp->info->last_credit_feedback_ts > rdp->cpu_freq / 20000)
     {
-        rdp->info->last_credit_feedback_ts=now_time;
+        rdp->info->last_credit_feedback_ts = now_time;
         double credit_loss = 1.0 * rdp->info->credit_dropped / rdp->info->credit_tot;
         if (credit_loss <= 0.1)
         {
@@ -215,7 +219,6 @@ void R_loop(struct rdp_params *rdp)
         rdp->info->pull_gen_time = 1.0 * rdp->cpu_freq / rdp->info->cur_rate * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
         rdp->info->credit_dropped = 0;
         rdp->info->credit_tot = 0;
-        
     }
 }
 

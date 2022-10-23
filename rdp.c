@@ -41,7 +41,7 @@ struct rdp_info
     uint64_t RTT;
     uint64_t last_credit_feedback_ts;
     double w;
-    double cur_rate;
+    int cur_rate;
     uint32_t credit_tot;
     uint32_t credit_dropped;
     uint64_t rtx_ts;

@@ -80,19 +80,19 @@ void S_preloop(struct rdp_params *rdp)
     while (!force_quit)
     {
         now_time = rte_get_tsc_cycles();
+        HDR *hdr = get_hdr(rcv_pkt(rdp));
+        if (hdr && hdr->flags.pull)
+        {
+            rdp->info->hdr.flags.syn = 0;
+            PKT *p = new_pkt();
+            rdp->info->hdr.sequence_number = hdr->sequence_number;
+            prepend_hdr(p, &rdp->info->hdr);
+            append_data_zero(p, app.data_size);
+            enqueue_pkt(p);
+            break;
+        }
         if (now_time - rdp->info->timestamp > rdp->cpu_freq)
         {
-            HDR *hdr = get_hdr(rcv_pkt(rdp));
-            if (hdr && hdr->flags.pull)
-            {
-                rdp->info->hdr.flags.syn = 0;
-                PKT *p = new_pkt();
-                rdp->info->hdr.sequence_number = hdr->sequence_number;
-                prepend_hdr(p, &rdp->info->hdr);
-                append_data_zero(p, app.data_size);
-                enqueue_pkt(p);
-                break;
-            }
             rdp->info->timestamp = now_time;
             PKT *p = new_pkt();
             prepend_hdr(p, &rdp->info->hdr);

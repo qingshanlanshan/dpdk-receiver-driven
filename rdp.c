@@ -194,6 +194,7 @@ void R_loop(struct rdp_params *rdp)
     now_time = rte_get_tsc_cycles();
     if (now_time - rdp->info->last_credit_feedback_ts > rdp->info->RTT*10)
     {
+        rdp->info->last_credit_feedback_ts=now_time;
         double credit_loss = 1.0 * rdp->info->credit_dropped / rdp->info->credit_tot;
         if (credit_loss <= 0.1)
         {
@@ -214,6 +215,7 @@ void R_loop(struct rdp_params *rdp)
         rdp->info->pull_gen_time = 1.0 * rdp->cpu_freq / rdp->info->cur_rate * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
         rdp->info->credit_dropped = 0;
         rdp->info->credit_tot = 0;
+        
     }
 }
 

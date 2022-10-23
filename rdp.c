@@ -16,14 +16,14 @@ void append(struct rcved_seq *l, uint32_t seq)
 bool del(struct rcved_seq *l, uint32_t seq, bool any)
 {
     struct rcved_seq *p = l;
-    while (p->next)
+    while (!force_quit && p->next)
     {
         if (p->next->sequence_number == seq || any)
         {
             struct rcved_seq *t = p->next;
             p->next = p->next->next;
             rte_free(t);
-            if(!any)
+            if (!any)
                 return 1;
         }
         p = p->next;
@@ -48,8 +48,6 @@ struct rdp_info
     bool phase;
     struct rcved_seq *list;
 };
-
-
 
 // module required functions
 void init(struct rdp_params *rdp)
@@ -78,19 +76,29 @@ void S_preloop(struct rdp_params *rdp)
 {
     rdp->info->hdr.flags.syn = 1;
     uint64_t now_time;
-    while(!force_quit)
+    while (!force_quit)
     {
-        now_time=rte_get_tsc_cycles();
-        if(now_time-rdp->info->timestamp>rdp->cpu_freq)
+        now_time = rte_get_tsc_cycles();
+        if (now_time - rdp->info->timestamp > rdp->cpu_freq)
         {
-            rdp->info->timestamp=now_time;
+            HDR *hdr = get_hdr(rcv_pkt(rdp));
+            if (hdr&&hdr->flags.pull)
+            {
+                rdp->info->hdr.flags.syn = 0;
+                PKT *p = new_pkt();
+                rdp->info->hdr.sequence_number = hdr->sequence_number;
+                prepend_hdr(p, &rdp->info->hdr);
+                append_data_zero(p, app.data_size);
+                enqueue_pkt(p);
+                break;
+            }
+            rdp->info->timestamp = now_time;
             PKT *p = new_pkt();
             prepend_hdr(p, &rdp->info->hdr);
             append_data_zero(p, app.data_size);
             enqueue_pkt(p);
         }
-    }
-    rdp->info->hdr.flags.syn = 0;
+    } 
 }
 
 void S_loop(struct rdp_params *rdp)
@@ -111,7 +119,7 @@ void S_loop(struct rdp_params *rdp)
         if (hdr->flags.pull && rdp->info->send)
         {
             p = new_pkt();
-            rdp->info->hdr.sequence_number=hdr->sequence_number;
+            rdp->info->hdr.sequence_number = hdr->sequence_number;
             prepend_hdr(p, &rdp->info->hdr);
             append_data_zero(p, app.data_size);
             enqueue_pkt(p);
@@ -159,7 +167,7 @@ void R_loop(struct rdp_params *rdp)
         if (hdr->sequence_number == rdp->info->expected_sequence_number)
         {
             rdp->info->expected_sequence_number++;
-            while (del(rdp->info->list, rdp->info->expected_sequence_number, 0))
+            while (!force_quit && del(rdp->info->list, rdp->info->expected_sequence_number, 0))
             {
                 rdp->info->expected_sequence_number++;
             }
@@ -180,7 +188,7 @@ void R_loop(struct rdp_params *rdp)
     {
         rdp->info->hdr.sequence_number = rdp->info->expected_sequence_number;
         rdp->info->rtx_ts = now_time;
-        while (del(rdp->info->list, 0, 1))
+        while (!force_quit && del(rdp->info->list, 0, 1))
         {
         }
     }

@@ -68,8 +68,8 @@ void init(struct rdp_params *rdp)
     rdp->info->credit_dropped = 0;
     rdp->info->rtx_ts = rte_get_tsc_cycles();
     rdp->info->phase = 1;
-    rdp->info->list = rte_malloc_socket(NULL, sizeof(struct rcved_seq), RTE_CACHE_LINE_SIZE, rte_socket_id());
-    rdp->info->list->next = NULL;
+    // rdp->info->list = rte_malloc_socket(NULL, sizeof(struct rcved_seq), RTE_CACHE_LINE_SIZE, rte_socket_id());
+    // rdp->info->list->next = NULL;
 }
 
 void S_preloop(struct rdp_params *rdp)
@@ -211,6 +211,8 @@ void R_loop(struct rdp_params *rdp)
             rdp->info->phase = 0;
         }
         rdp->info->pull_gen_time = 1.0 * rdp->cpu_freq / rdp->info->cur_rate * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
+        rdp->info->credit_dropped=0;
+        rdp->info->credit_tot=0;
     }
 }
 

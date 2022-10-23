@@ -163,8 +163,7 @@ void R_loop(struct rdp_params *rdp)
     {
         if (hdr->flags.end)
             rdp->info->send = 0;
-
-        if (hdr->sequence_number == rdp->info->expected_sequence_number)
+        if (!hdr->flags.syn && hdr->sequence_number == rdp->info->expected_sequence_number)
         {
             rdp->info->expected_sequence_number++;
             // while (!force_quit && del(rdp->info->list, rdp->info->expected_sequence_number, 0))

@@ -1,35 +1,36 @@
 #include "main.h"
 
 // user functions & data
-struct rcved_seq
-{
-    uint32_t sequence_number;
-    struct rcved_seq *next;
-};
-void append(struct rcved_seq *l, uint32_t seq)
-{
-    struct rcved_seq *temp = rte_malloc_socket(NULL, sizeof(struct rcved_seq), RTE_CACHE_LINE_SIZE, rte_socket_id());
-    temp->sequence_number = seq;
-    temp->next = l->next;
-    l->next = temp;
-}
-bool del(struct rcved_seq *l, uint32_t seq, bool any)
-{
-    struct rcved_seq *p = l;
-    while (!force_quit && p->next)
-    {
-        if (p->next->sequence_number == seq || any)
-        {
-            struct rcved_seq *t = p->next;
-            p->next = p->next->next;
-            rte_free(t);
-            if (!any)
-                return 1;
-        }
-        p = p->next;
-    }
-    return 0;
-}
+// struct rcved_seq
+// {
+//     uint32_t sequence_number;
+//     struct rcved_seq *next;
+// };
+// void append(struct rcved_seq *l, uint32_t seq)
+// {
+//     struct rcved_seq *temp = rte_malloc_socket(NULL, sizeof(struct rcved_seq), RTE_CACHE_LINE_SIZE, rte_socket_id());
+//     temp->sequence_number = seq;
+//     temp->next = l->next;
+//     l->next = temp;
+// }
+// bool del(struct rcved_seq *l, uint32_t seq, bool any)
+// {
+//     struct rcved_seq *p = l;
+//     while (!force_quit && p->next)
+//     {
+//         if (p->next->sequence_number == seq || any)
+//         {
+//             struct rcved_seq *t = p->next;
+//             p->next = p->next->next;
+//             rte_free(t);
+//             if (!any)
+//                 return 1;
+//         }
+//         p = p->next;
+//     }
+//     return 0;
+// }
+
 struct rdp_info
 {
     uint32_t expected_sequence_number;
@@ -59,7 +60,7 @@ void init(struct rdp_params *rdp)
     rdp->info->n_pull = 0;
     rdp->info->send = 1;
     rdp->info->timestamp = rte_get_tsc_cycles();
-    rdp->info->pull_gen_time = 1.0 * rdp->cpu_freq / app.default_speed * 2 * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
+    rdp->info->pull_gen_time = 1.0 * rdp->cpu_freq / app.default_speed * 0.9 * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
     rdp->info->RTT = 0;
     rdp->info->last_credit_feedback_ts = 0;
     rdp->info->w = 0.5;

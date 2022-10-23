@@ -161,8 +161,8 @@ void R_loop(struct rdp_params *rdp)
     HDR *hdr = get_hdr(rcv_pkt(rdp));
     if (hdr)
     {
-        if (hdr->flags.end)
-            rdp->info->send = 0;
+        // if (hdr->flags.end)
+        //     rdp->info->send = 0;
         if (!hdr->flags.syn && hdr->sequence_number == rdp->info->expected_sequence_number)
         {
             rdp->info->expected_sequence_number++;

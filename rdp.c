@@ -23,11 +23,12 @@ bool del(struct rcved_seq *l, uint32_t seq, bool any)
             struct rcved_seq *t = p->next;
             p->next = p->next->next;
             rte_free(t);
-            return 1;
+            if(!any)
+                return 1;
         }
         p = p->next;
     }
-    return 0;
+    return any;
 }
 struct rdp_info
 {

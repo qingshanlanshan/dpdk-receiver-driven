@@ -176,20 +176,21 @@ void R_loop(struct rdp_params *rdp)
         else if (hdr->sequence_number > rdp->info->expected_sequence_number)
         {
             rdp->info->credit_dropped += (hdr->sequence_number - rdp->info->expected_sequence_number);
-            append(rdp->info->list, hdr->sequence_number);
+            // append(rdp->info->list, hdr->sequence_number);
+            rdp->info->hdr.sequence_number=rdp->info->expected_sequence_number;
         }
         else
         {
             RTE_LOG(WARNING, SWITCH, "pkt seq < expected seq\n");
         }
     }
-    now_time = rte_get_tsc_cycles();
-    if (now_time - rdp->info->rtx_ts > rdp->cpu_freq * 2)
-    {
-        rdp->info->hdr.sequence_number = rdp->info->expected_sequence_number;
-        rdp->info->rtx_ts = now_time;
-        del(rdp->info->list, 0, 1);
-    }
+    // now_time = rte_get_tsc_cycles();
+    // if (now_time - rdp->info->rtx_ts > rdp->cpu_freq * 2)
+    // {
+    //     rdp->info->hdr.sequence_number = rdp->info->expected_sequence_number;
+    //     rdp->info->rtx_ts = now_time;
+    //     del(rdp->info->list, 0, 1);
+    // }
     now_time = rte_get_tsc_cycles();
     if (now_time - rdp->info->last_credit_feedback_ts > rdp->info->RTT)
     {

@@ -59,7 +59,7 @@ void init(struct rdp_params *rdp)
     rdp->info->n_pull = 0;
     rdp->info->send = 1;
     rdp->info->timestamp = rte_get_tsc_cycles();
-    rdp->info->pull_gen_time = 1.0*rdp->cpu_freq / app.default_speed * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
+    rdp->info->pull_gen_time = 1.0 * rdp->cpu_freq / app.default_speed * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
     rdp->info->RTT = 0;
     rdp->info->last_credit_feedback_ts = 0;
     rdp->info->w = 0.5;
@@ -82,7 +82,7 @@ void S_preloop(struct rdp_params *rdp)
         if (now_time - rdp->info->timestamp > rdp->cpu_freq)
         {
             HDR *hdr = get_hdr(rcv_pkt(rdp));
-            if (hdr&&hdr->flags.pull)
+            if (hdr && hdr->flags.pull)
             {
                 rdp->info->hdr.flags.syn = 0;
                 PKT *p = new_pkt();
@@ -98,7 +98,7 @@ void S_preloop(struct rdp_params *rdp)
             append_data_zero(p, app.data_size);
             enqueue_pkt(p);
         }
-    } 
+    }
 }
 
 void S_loop(struct rdp_params *rdp)
@@ -156,7 +156,14 @@ void R_loop(struct rdp_params *rdp)
         rdp->info->hdr.sequence_number++;
         rdp->info->timestamp = now_time;
         prepend_hdr(p, &rdp->info->hdr);
-        enqueue_pkt(p);
+        if (enqueue_pkt(p) == 0)
+        {
+            RTE_LOG(INFO, SWITCH, "Enqueue success\n");
+        }
+        else
+        {
+            RTE_LOG(INFO, SWITCH, "Enqueue failed\n");
+        }
     }
     HDR *hdr = get_hdr(rcv_pkt(rdp));
     if (hdr)
@@ -211,7 +218,7 @@ void R_loop(struct rdp_params *rdp)
             rdp->info->w = rdp->info->w > 0.01 ? rdp->info->w : 0.01;
             rdp->info->phase = 0;
         }
-        rdp->info->pull_gen_time = 1.0*rdp->cpu_freq / rdp->info->cur_rate * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
+        rdp->info->pull_gen_time = 1.0 * rdp->cpu_freq / rdp->info->cur_rate * 8 * (sizeof(struct pkt_hdr) + app.data_size * sizeof(char)) / (1 << 20);
     }
 }
 

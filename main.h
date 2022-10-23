@@ -335,9 +335,9 @@ struct rdp_params
 
 struct rte_mbuf *new_pkt(void);
 void prepend_hdr(PKT *, struct pkt_hdr *);
-void append_data_zero(PKT *, int);
-void append_data(PKT *, char *, int);
-void enqueue_pkt(PKT *);
+char * append_data_zero(PKT *, int);
+char * append_data(PKT *, char *, int);
+int enqueue_pkt(PKT *);
 PKT *rcv_pkt(struct rdp_params *);
 HDR *get_hdr(PKT *);
 char *get_data(PKT *);

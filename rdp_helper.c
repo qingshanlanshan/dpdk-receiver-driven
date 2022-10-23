@@ -15,24 +15,27 @@ void prepend_hdr(PKT *p, struct pkt_hdr *hdr)
 }
 
 // append data_size bytes of data to a pkt
-void append_data(PKT *p, char *data, int data_size)
+char * append_data(PKT *p, char *data, int data_size)
 {
-    char *ret;
-    ret = rte_pktmbuf_append(p, sizeof(char) * data_size);
-    rte_memcpy(ret, data, data_size);
+    char *ret = rte_pktmbuf_append(p, sizeof(char) * data_size);
+    if (ret)
+        rte_memcpy(ret, data, data_size);
+    return ret;
 }
 
 // append data_size bytes of zero to a pkt
-void append_data_zero(PKT *p, int data_size)
+char *append_data_zero(PKT *p, int data_size)
 {
     char *ret = rte_pktmbuf_append(p, sizeof(char) * data_size);
-    memset(ret, 0, sizeof(char) * data_size);
+    if (ret)
+        memset(ret, 0, sizeof(char) * data_size);
+    return ret;
 }
 
 // enqueue a pkt to transmit ring
-void enqueue_pkt(PKT *p)
+int enqueue_pkt(PKT *p)
 {
-    rte_ring_mp_enqueue(app.rings_tx, p);
+    return rte_ring_mp_enqueue(app.rings_tx, p);
 }
 
 // fill rdp->worker_mbuf->array with received pkt
@@ -46,17 +49,17 @@ PKT *rcv_pkt(struct rdp_params *rdp)
 }
 
 // get the pointer to the hdr of a pkt
-HDR* get_hdr(PKT *pkt)
+HDR *get_hdr(PKT *pkt)
 {
-    if(!pkt)
+    if (!pkt)
         return NULL;
     return rte_pktmbuf_mtod(pkt, struct pkt_hdr *);
 }
 
 // get the pointer to the data of a pkt
-char* get_data(PKT *pkt)
+char *get_data(PKT *pkt)
 {
-    if(!pkt)
+    if (!pkt)
         return NULL;
-    return rte_pktmbuf_mtod_offset(pkt, char *,sizeof(struct pkt_hdr));
+    return rte_pktmbuf_mtod_offset(pkt, char *, sizeof(struct pkt_hdr));
 }

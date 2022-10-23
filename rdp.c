@@ -167,11 +167,11 @@ void R_loop(struct rdp_params *rdp)
         if (hdr->sequence_number == rdp->info->expected_sequence_number)
         {
             rdp->info->expected_sequence_number++;
-            while (!force_quit && del(rdp->info->list, rdp->info->expected_sequence_number, 0))
-            {
-                rdp->info->expected_sequence_number++;
-                rdp->info->rtx_ts = rte_get_tsc_cycles();
-            }
+            // while (!force_quit && del(rdp->info->list, rdp->info->expected_sequence_number, 0))
+            // {
+            //     rdp->info->expected_sequence_number++;
+            //     rdp->info->rtx_ts = rte_get_tsc_cycles();
+            // }
         }
         else if (hdr->sequence_number > rdp->info->expected_sequence_number)
         {

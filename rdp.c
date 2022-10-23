@@ -149,7 +149,7 @@ void R_preloop(struct rdp_params *rdp)
 void R_loop(struct rdp_params *rdp)
 {
     uint64_t now_time = rte_get_tsc_cycles();
-    if (rdp->info->send && (rdp->info->pull_gen_time || now_time - rdp->info->timestamp > rdp->info->pull_gen_time))
+    if (rdp->info->send && now_time - rdp->info->timestamp > rdp->info->pull_gen_time)
     {
         rdp->info->credit_tot++;
         PKT *p = new_pkt();
